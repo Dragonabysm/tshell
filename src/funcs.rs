@@ -3,9 +3,12 @@ pub mod funcs {
     use crate::user_assist::help;
     use std::env;
     use std::fs;
+    use std::fs::File;
+    use std::fs::ReadDir;
     use std::io::Read;
     use std::io::Write;
-    use sysinfo::{System, SystemExt, CpuExt};
+    use std::path::PathBuf;
+    use sysinfo::{CpuExt, System, SystemExt};
 
     pub fn ls(args: Vec<&str>) {
         /*  # LS
@@ -17,21 +20,21 @@ pub mod funcs {
 
             Examples: ls C:\Users\Dragon\Desktop        ls Users
         */
-        let paths;
+        let paths: ReadDir;
 
         if args.len() > 1 {
-            let dir = args[1];
+            let dir: &str = args[1];
             paths = fs::read_dir(&dir).unwrap();
         } else {
-            let dir = env::current_dir().unwrap();
+            let dir: PathBuf = env::current_dir().unwrap();
             paths = fs::read_dir(&dir).unwrap();
         }
 
         println!("                    Name                  Path");
 
         for path in paths {
-            let file_with_path = path.unwrap().path();
-            let file = file_with_path.file_name();
+            let file_with_path: PathBuf = path.unwrap().path();
+            let file: Option<&std::ffi::OsStr> = file_with_path.file_name();
 
             println!(
                 "    {: >20}                  {}",
@@ -51,7 +54,7 @@ pub mod funcs {
 
             Examples: pwd
         */
-        let dir = env::current_dir().unwrap();
+        let dir: PathBuf = env::current_dir().unwrap();
         println!("Path: {}", dir.display())
     }
 
@@ -66,14 +69,15 @@ pub mod funcs {
             Examples: touch my.txt        touch my.txt C:\Users\Dragon\Desktop
         */
 
-        let dir = env::current_dir().unwrap();
+        let dir: PathBuf = env::current_dir().unwrap();
 
         if !(args.len() > 1) {
+            drop(dir);
             help::help_funcs::touch_help();
         } else {
-            let dir = dir.join(format!("{}", args[1]));
+            let dir: PathBuf = dir.join(format!("{}", args[1]));
 
-            let mut new_file = fs::File::create(dir).expect("Error on create file.");
+            let mut new_file: File = fs::File::create(dir).expect("Error on create file.");
 
             new_file.write_all(b"").unwrap();
         }
@@ -110,15 +114,16 @@ pub mod funcs {
         */
 
         if !(args.len() > 1) {
-            panic!("Falta de argumentos")
+            help::help_funcs::cat_help()
+        } else {
+            let mut file: File = fs::File::open(args[1]).unwrap();
+
+            let mut file_content: String = String::new();
+
+            file.read_to_string(&mut file_content).unwrap();
+
+            println!("{file_content}")
         }
-        let mut file = fs::File::open(args[1]).unwrap();
-
-        let mut file_content = String::new();
-
-        file.read_to_string(&mut file_content).unwrap();
-
-        println!("{file_content}")
     }
 
     pub fn clear() {
@@ -131,9 +136,6 @@ pub mod funcs {
 
             Examples: clear
         */
-        for _ in 0..100 {
-            println!()
-        }
         print!("{esc}c", esc = 27 as char);
     }
 
@@ -156,6 +158,12 @@ pub mod funcs {
             "clear", "Clean the terminal."
         );
 
+        // Rm
+        println!(
+            "  {: >10}           {: <51}     rm (-rf) [path]",
+            "rm", "Remove a file or directory."
+        );
+
         // Ls
         println!(
             "  {: >10}           {: <51}     ls [optional<Path>]",
@@ -166,6 +174,12 @@ pub mod funcs {
         println!(
             "  {: >10}           {: <51}     pwd",
             "pwd", "Return the absolute actual path."
+        );
+
+        // Info
+        println!(
+            "  {: >10}           {: <51}     info",
+            "info", "Show informations of my, the dev."
         );
 
         // Touch
@@ -179,9 +193,24 @@ pub mod funcs {
             "  {: >10}           {: <51}     cat [<File dir>]",
             "cat", "Return the content of readable file referenced."
         );
+
+        // Treck
+        println!(
+            "  {: >10}           {: <51}     treck",
+            "treck", "Show the hardware info: memory RAM, CPU usage and SO"
+        );
     }
 
     pub fn treck() {
+        /*  # Treck
+
+            Show the hardware info: memory RAM, CPU usage and SO
+
+            Usage:
+            treck
+
+            Examples: treck
+        */
         let mut sys = System::new_all();
         sys.refresh_all();
 
@@ -195,4 +224,51 @@ pub mod funcs {
         println!("      System kernel version:   {:?}", sys.kernel_version());
         println!("      System OS version:       {:?}", sys.os_version());
     }
+
+    pub fn info() {
+        /*  # Info
+
+            Show informations of my, the dev.
+
+            Usage:
+            info
+
+            Examples: info
+        */
+        println!("{: ^100}", "\x1b[1;31mThe Project\x1b[0m");
+        println!();
+
+        println!(
+            "{:-^100}",
+            "\x1b[1;32m Github:\x1b[0m https://github.com/Dragonabysm/tshell "
+        );
+        println!("{:-^100}", "\x1b[1;32m Gmail:\x1b[0m dinishigor@gmail.com ");
+        println!()
+    }
+
+    pub fn rm(args: Vec<&str>) {
+        /*  # Remove
+
+            Remove a file or directory.
+
+            Usage:
+            rm (-rf) [path]
+
+            Examples: rm -rf C:\Users\Dragon\Desktop\my.txt         rm Desktop
+        */
+        if args.len() > 1 {
+            let dir = args[1];
+            for arg in args {
+                if arg == "-rf" {
+                    errors::errors_check::remove_file_error_check(fs::remove_file(dir));
+                } else {
+                    errors::errors_check::remove_dir_error_check(fs::remove_dir_all(dir));
+                }
+            }
+        } else {
+            help::help_funcs::rm_help();
+        }
+    }
+
+
 }

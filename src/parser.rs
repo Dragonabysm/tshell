@@ -12,6 +12,10 @@ pub mod searcher {
             "clear" => funcs::clear(),
             "help" => funcs::help(),
             "treck" => funcs::treck(),
+            "info" => funcs::info(),
+            "rm" => funcs::rm(args),
+            "" => {},
+            "\n" => {},
             &_ => unknow_command(args[0]),
         }
     }

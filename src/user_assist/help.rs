@@ -12,4 +12,18 @@ pub mod help_funcs {
             "Create a file."
         )
     }
+
+    pub fn cat_help() {
+        println!(
+            "       {: ^40} \n  Example: \x1b[1;36mcat my.txt   cat C:/Users/Dragon/my.txt\x1b[0m",
+            "Returns the content of a file."
+        )
+    }
+
+    pub fn rm_help() {
+        println!(
+            "       {: ^40} \n  Example: \x1b[1;36mrm -rf my.txt   rm C:/Users/Dragon/Desktop/Folder\x1b[0m",
+            "Remove a file or directory."
+        )
+    }
 }
